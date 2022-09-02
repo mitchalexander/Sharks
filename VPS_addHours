@@ -1,0 +1,63 @@
+import pandas as pd
+from datetime import date, datetime, timedelta
+
+# import existing csv
+csv = 'F:/Sharks/Receivers.csv'
+
+# convert csv to pandas dataframe
+df = pd.read_csv(csv)
+
+# create two empty dataframes to fill later
+new_df = pd.DataFrame()
+new_df2 = pd.DataFrame()
+
+# create function to step through time hourly, found on stackexchange
+def datespan(startDate, endDate, delta=timedelta(days=1)):
+    currentDate = startDate
+    while currentDate < endDate:
+        yield currentDate
+        currentDate += delta
+        
+# Make two empty lists, one for the rows one for a new column
+timeRow = []
+timeColumn = []
+
+# loop through each hour of 2020 study period
+for timestamp in datespan(datetime(2020, 5, 21, 16), 
+                           datetime(2020, 12, 6, 9), 
+                           delta=timedelta(hours=1)):
+    
+    # create a list that is as long as the number of rows in the dataframe with the time repeated
+    for t in range(len(df)):
+        timeColumn.append(timestamp.strftime("%m/%d/%Y %H:%M:%S"))
+    
+    # repeat the number of rows for each hour
+    temp_df = df
+    timeRow.append(temp_df)
+
+# Concatenate all the rows together, creating a new df that is original number of rows x hours
+new_df = pd.concat(timeRow, ignore_index=True)
+# add new column with the hours
+new_df['HourlyTemp'] = timeColumn
+
+# Repeat for 2021
+timeRow = []
+timeColumn = []
+for timestamp in datespan(datetime(2021, 5, 4, 19), 
+                           datetime(2021, 12, 9, 10), 
+                           delta=timedelta(hours=1)):
+    
+    for t in range(len(df)):
+        timeColumn.append(timestamp.strftime("%m/%d/%Y %H:%M:%S"))
+        
+    temp_df = df
+    timeRow.append(temp_df)
+
+new_df2 = pd.concat(timeRow, ignore_index=True)
+new_df2['HourlyTemp'] = timeColumn
+
+# Join 2020 and 2021 dataframes
+final_df = pd.concat([new_df, new_df2], ignore_index=True)
+
+# Write to csv
+final_df.to_csv('F:/Sharks/newReceivers.csv', index=False)
